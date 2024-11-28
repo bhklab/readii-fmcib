@@ -10,6 +10,15 @@ from tqdm.auto import tqdm
 from imgtools.ops import Resize
 
 def find_bbox(mask: sitk.Image) -> np.ndarray:
+    """
+    Finds the bounding box of a given mask image.
+
+    Parameters:
+    mask (sitk.Image): The input mask image.
+
+    Returns:
+    np.ndarray: The bounding box coordinates as a numpy array.
+    """
     mask_uint = sitk.Cast(mask, sitk.sitkUInt8)
     stats = sitk.LabelShapeStatisticsImageFilter()
     stats.Execute(mask_uint)
@@ -27,7 +36,18 @@ def find_bbox(mask: sitk.Image) -> np.ndarray:
     xend, yend, zend = xstart + xsize, ystart + ysize, zstart + zsize
     return xstart, xend, ystart, yend, zstart, zend
 
-def crop_bbox(image: sitk.Image, bbox_coords, input_size) -> sitk.Image:
+def crop_bbox(image: sitk.Image, bbox_coords: tuple, input_size: tuple) -> sitk.Image:
+    """
+    Crops a bounding box from the given image and resizes it to the specified input size.
+    The if/else statements are used to ensure that the bounding box is not cropped outside the image boundaries.
+
+    Args:
+        image (sitk.Image): The input image from which the bounding box will be cropped.
+        bbox_coords (tuple): Cordinates of the bounding box.
+        input_size (tuple): Desired output size of the cropped image.
+    Returns:
+        sitk.Image: The cropped and resized image.
+    """
     min_x, max_x, min_y, max_y, min_z, max_z = bbox_coords
     img_x, img_y, img_z = image.GetSize()
 
@@ -51,6 +71,17 @@ def crop_bbox(image: sitk.Image, bbox_coords, input_size) -> sitk.Image:
     return img_crop
 
 def get_row(ct_path, mask_path, output_path):
+    """
+    Processes a CT image and its corresponding mask to extract a cropped region and save it.
+
+    Args:
+        ct_path (str): Path to the CT image file.
+        mask_path (str): Path to the mask image file.
+        output_path (str): Directory where the cropped image will be saved.
+
+    Returns:
+        tuple: Path to the saved cropped image and coordinates (0, 0, 0) if successful, otherwise None.
+    """
     if os.path.exists(ct_path) and os.path.exists(mask_path):
         # get GTVp centroid
         img  = sitk.ReadImage(ct_path)
@@ -70,9 +101,6 @@ def get_row(ct_path, mask_path, output_path):
         crop_path = os.path.join(output_path, f"{pat_id}.nii.gz")
         sitk.WriteImage(img_crop, crop_path)
         return crop_path, 0, 0, 0
-    
-    return
-
 
 def main():
     params = readii_parser().parse_args()
@@ -86,7 +114,7 @@ def main():
     if not os.path.exists(params.output_path):
         os.makedirs(params.output_path)
 
-    # multi process
+    # multi process using ALL available cores
     rows = Parallel(n_jobs=-1)(delayed(get_row)(i, j, params.output_path) for i, j in tqdm(zip(img_paths, mask_paths)))
 
     # convert to dataframe
