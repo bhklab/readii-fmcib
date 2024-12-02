@@ -3,7 +3,7 @@ from args import parser
 import os
 from typing import Optional
 
-def infer(feature_file_save_path:str, 
+def runFMCIBInfer(feature_file_save_path:str, 
           csv_path:str, 
           weights_path:Optional[str]=None, 
           precropped:Optional[bool]=False):
@@ -41,7 +41,7 @@ def infer(feature_file_save_path:str,
 if __name__ == "__main__":
     params = parser().parse_args()
 
-    infer(feature_file_save_path=params.save_path, 
-          csv_path=params.input_path, 
-          weights_path=params.weights_path, 
-          precropped=params.precropped)
+    runFMCIBInfer(feature_file_save_path=params.save_path, 
+                  csv_path=params.input_path, 
+                  weights_path=params.weights_path, 
+                  precropped=params.precropped)
