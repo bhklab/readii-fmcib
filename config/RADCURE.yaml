@@ -1,0 +1,5 @@
+# Config file for RADCURE
+dataset_name: RADCURE 
+
+negative_control_regions: ["full", "roi", "non_roi"]
+negative_control_types: ["shuffled", "randomized_sampled"]
