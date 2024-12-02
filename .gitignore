@@ -15,3 +15,8 @@ spec_file_root.txt
 */__pycache__
 
 .vscode
+
+rawdata/
+procdata/
+
+.DS_Store
