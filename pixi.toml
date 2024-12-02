@@ -8,12 +8,26 @@ platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
 
 [tasks]
 
+[environments]
+fmcib = {features = ["fmcib"], no-default-feature = true}
+
 [dependencies]
-python = "3.10.*"
-python-dotenv = ">=1.0.1,<2"
+python = "3.12.*"
 ipykernel = ">=6.29.5,<7"
+pip = ">=24.3.1,<25"
 
 [pypi-dependencies]
+readii = ">=1.18.0, <2"
+med-imagetools = ">=1.9.4, <2"
+
+[feature.fmcib.dependencies]
+python = "3.10.*"
+ipykernel = ">=6.29.5,<7"
+pip = ">=23.3.2,<24"
+python-dotenv = ">=1.0.1,<2"
+joblib = ">=1.4.2,<2"
+
+[feature.fmcib.pypi-dependencies]
 project-lighter = { version = "==0.0.2a19" }
 foundation-cancer-image-biomarker = ">=1.0.0, <2"
 med-imagetools = ">=1.2.0.2, <2"
