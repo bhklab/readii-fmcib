@@ -6,14 +6,22 @@ authors = ["Sejin Kim <hello@sejin.kim>", "Katy Scott <k.l.scott16@gmail.com>"]
 channels = ["conda-forge"]
 platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
 
+[system-requirements]
+linux="3.10.0"
+
 [tasks]
+imgtools = "pip install --no-build-isolation --disable-pip-version-check -e /cluster/home/sejinkim/pkgs/med-imagetools"
+
+[environments]
+default = ["base"]
 
 [dependencies]
 python = "3.10.*"
-python-dotenv = ">=1.0.1,<2"
+python-dotenv = ">=1.0.1,<1.1"
+poetry = ">=1.8.3,<1.9"
+joblib = ">=1.4.2,<2"
 ipykernel = ">=6.29.5,<7"
 
-[pypi-dependencies]
+[feature.base.pypi-dependencies]
 project-lighter = { version = "==0.0.2a19" }
-foundation-cancer-image-biomarker = ">=1.0.0, <2"
-med-imagetools = ">=1.2.0.2, <2"
+
