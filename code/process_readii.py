@@ -17,7 +17,7 @@ def find_bbox(mask: sitk.Image) -> np.ndarray:
     mask (sitk.Image): The input mask image.
 
     Returns:
-    np.ndarray: The bounding box coordinates as a numpy array.
+    np.ndarray: The bounding box coordinates as a numpy array, [xstart, xend, ystart, yend, zstart, zend].
     """
     mask_uint = sitk.Cast(mask, sitk.sitkUInt8)
     stats = sitk.LabelShapeStatisticsImageFilter()
@@ -44,7 +44,7 @@ def crop_bbox(image: sitk.Image, bbox_coords: tuple, input_size: tuple) -> sitk.
     Args:
         image (sitk.Image): The input image from which the bounding box will be cropped.
         bbox_coords (tuple): Cordinates of the bounding box.
-        input_size (tuple): Desired output size of the cropped image.
+        input_size (tuple): Desired output size of the cropped image. eg. (50, 50, 50)
     Returns:
         sitk.Image: The cropped and resized image.
     """
