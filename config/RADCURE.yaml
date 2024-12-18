@@ -1,5 +1,7 @@
 # Config file for RADCURE
 dataset_name: RADCURE 
 
+patient_id_pattern: RADCURE-[0-9]{4}
+
 negative_control_regions: ["full", "roi", "non_roi"]
 negative_control_types: ["shuffled", "randomized_sampled"]
