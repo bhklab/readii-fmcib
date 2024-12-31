@@ -57,7 +57,9 @@ def makeAllHistogramPlots(correlation_matrix:pd.DataFrame,
                         horizontal_feature_type:str, 
                         save_dir_path:Path,
                         correlation_method:str="pearson", 
-                        num_bins:int = 450)-> tuple[Path, Path, Path]:
+                        num_bins:int = 450,
+                        self_corr_y_max = 250000,
+                        cross_corr_y_max = 700000)-> tuple[Path, Path, Path]:
     """"Plot and save correlation histograms for the vertical, horizontal, and cross correlation feature sections of a full correlation matrix."""
 
     print("Plotting vertical feature correlations histogram...")
@@ -65,19 +67,20 @@ def makeAllHistogramPlots(correlation_matrix:pd.DataFrame,
                                                vertical_feature_type,
                                                correlation_method,
                                                num_bins,
-                                               y_upper_bound=55000,
+                                               y_upper_bound = self_corr_y_max,
                                                save_dir_path=save_dir_path)
     print("Plotting horizontal feature correlations histogram...")
     _, horiz_histogram_path = plotSelfCorrHistogram(correlation_matrix,
                                                 horizontal_feature_type,
                                                 correlation_method,
-                                                y_upper_bound=55000,
+                                                y_upper_bound = self_corr_y_max,
                                                 save_dir_path=save_dir_path)
     print("Plotting cross feature correlations histogram...")
     _, cross_histogram_path = plotCrossCorrHistogram(correlation_matrix,
                                                  vertical_feature_type,
                                                  horizontal_feature_type,
                                                  correlation_method,
+                                                 y_upper_bound = cross_corr_y_max,
                                                  save_dir_path=save_dir_path)
     plt.close('all')
     return vert_histogram_path, horiz_histogram_path, cross_histogram_path
