@@ -11,6 +11,22 @@ linux="3.10.0"
 
 [tasks]
 imgtools = "pip install --no-build-isolation --disable-pip-version-check -e /cluster/home/sejinkim/pkgs/med-imagetools"
+process = "python code/process_readii_50_cube.py $BASE_PATH --output_path $OUTPUT_PATH --save_path $SAVE_PATH"
+centroid = "python code/process_centroid.py $BASE_PATH --output_path $CENTROID_PATH --save_path $CENTROID_CSV_PATH"
+infer = "python code/infer.py --precropped"
+centinfer = "python code/infer.py --input_path $CENTROID_CSV_PATH --save_path $CENTROID_SAVE_PATH --precropped"
+
+
+[activation]
+env.BASE_PATH = "/home/bioinf/bhklab/radiomics/readii-negative-controls/rawdata/RADCURE/images/niftis"
+env.INPUT_FORMAT = "*/*/original.nii.gz"
+env.MASK_FORMAT = "*/*/GTV.nii.gz"
+env.OUTPUT_PATH = "/home/bioinf/bhklab/radiomics/readii-negative-controls/procdata/RADCURE/readii_cube_50_crop"
+env.CENTROID_PATH = "/home/bioinf/bhklab/radiomics/readii-negative-controls/procdata/RADCURE/readii_centroid_crop"
+env.SAVE_PATH = "./readii_cube_50_crop.csv"
+env.CENTROID_CSV_PATH = "./readii_centroid_crop.csv"
+env.FMCIB_SAVE_PATH = "/home/bioinf/bhklab/radiomics/readii-negative-controls/procdata/RADCURE/fmcib/readii_cube_50_crop.csv"
+env.CENTROID_SAVE_PATH = "/home/bioinf/bhklab/radiomics/readii-negative-controls/procdata/RADCURE/fmcib/readii_centroid_crop.csv"
 
 [environments]
 default = ["base"]
@@ -20,6 +36,7 @@ surv = ["survival"]
 python = "3.10.*"
 python-dotenv = ">=1.0.1,<1.1"
 poetry = ">=1.8.3,<1.9"
+joblib = ">=1.4.2,<2"
 
 [feature.base.pypi-dependencies]
 project-lighter = { version = "==0.0.2a19" }
@@ -31,3 +48,6 @@ lifelines = ">=0.9.4,<0.28"
 rpy2 = ">=3.5.11,<3.6"
 r-mrmre = ">=2.1.2.1,<2.1.3"
 r-essentials = ">=4.1,<5"
+
+[pypi-dependencies]
+med-imagetools = ">=1.2.0.2, <2"
