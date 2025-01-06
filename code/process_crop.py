@@ -3,8 +3,12 @@ import SimpleITK as sitk
 import numpy as np
 
 from imgtools.ops import Resize
+from joblib import Parallel, delayed
 from pathlib import Path
+from readii.negative_controls import applyNegativeControl
 from typing import Literal
+
+
 
 def find_bbox(mask: sitk.Image) -> np.ndarray:
     """
@@ -216,15 +220,12 @@ def crop_maxdim_cube(image: sitk.Image, bbox_coords: tuple, input_size: tuple) -
 
 
 
-def crop_fmcib_input(image_path:Path, 
-                     mask_path:Path, 
+def crop_fmcib_input(image:sitk.Image, 
+                     mask:sitk.Image, 
                      crop_method:Literal["bbox", "centroid", "cube"]="bbox",
                      input_size:tuple = (50,50,50),
                     ):
-
-    image = sitk.ReadImage(image_path)
-    mask = sitk.ReadImage(mask_path)
-
+    """Crop and resize an image in a specified manner using a mask to find a bounding box or centroid."""
     match crop_method:
         case "bbox":
             bbox = find_bbox(mask)
@@ -241,6 +242,79 @@ def crop_fmcib_input(image_path:Path,
     return cropped_image
 
 
-def prep_for_fmcib(images_metadata, image_dir, output_path, negative_controls, crop_method, crop_size):
+
+def get_fmcib_row(pat_metadata_row:pd.Series,
+                  input_image_dir:Path,
+                  output_path:Path,
+                  crop_method:Literal["bbox", "centroid", "cube"]="bbox",
+                  input_size:tuple = (50,50,50),
+                  roi_name:str = "GTV",
+                  negative_control_strategy:Literal["original", "shuffled", "sampled"] = "original",
+                  negative_control_region:Literal[None, "full", "roi", "non-roi"] = None,
+                  ):
+    """Process a single image for FMCIB input"""
+    patient_id = pat_metadata_row['patient_ID']
+    
+    output_path.mkdir(parents=True, exist_ok=True)
+    crop_path = output_path / negative_control_strategy / f"{patient_id}.nii.gz"
+
+    if not crop_path.exists:
+        try:
+            image_path = input_image_dir / pat_metadata_row['output_folder_CT'] / "CT.nii.gz"
+            mask_path = input_image_dir / pat_metadata_row['output_folder_RTSTRUCT_CT'] / f"{roi_name}.nii.gz"
+
+            # Load image and mask to crop to 
+            image = sitk.ReadImage(image_path)
+            mask = sitk.ReadImage(mask_path)
+            assert image.GetSize() == mask.GetSize(), (f"Image size ({image.GetSize()} and mask size ({mask.GetSize()} don't match.)")
+
+            # Generate negative control if specified
+            if not (negative_control_strategy == "original"):
+                image = applyNegativeControl(image,
+                                             negative_control_strategy,
+                                             negative_control_region,
+                                             mask,
+                                             randomSeed = 10)
+                
+            # Crop the image to the ROI mask
+            cropped_image = crop_fmcib_input(image_path, mask_path, crop_method, input_size)
+
+            # Write out cropped image
+            sitk.WriteImage(cropped_image, crop_path)
+
+        except Exception as e:
+            return None, 0, 0, 0
+    
+    return crop_path, 0,0,0
+
+
+def prep_data_for_fmcib(input_image_dir:Path, 
+                        output_path:Path, 
+                        crop_method:Literal["bbox", "centroid", "cube"]="bbox",
+                        input_size:tuple = (50,50,50),
+                        roi_name:str = "GTV",
+                        negative_control_strategy:Literal[None, "shuffled", "sampled"] = None,
+                        negative_control_region:Literal[None, "full", "roi", "non-roi"] = None
+                        ):
+    # Read in the output summary metadata file from med-imagetools nifti conversion
+    image_metadata = pd.read_csv(input_image_dir / "dataset.csv")
+
+    cropped_output_dir = output_path / f"cropped_{crop_method}"
+
+
+    proc_image_metadata = Parallel(n_jobs=-1)(
+        delayed(get_fmcib_row)(
+            image_metadata.loc[image_idx],
+            input_image_dir = input_image_dir,
+            output_path = cropped_output_dir,
+            crop_method = crop_method,
+            input_size = input_size,
+            roi_name = roi_name,
+            negative_control_strategy = negative_control_strategy,
+            negative_control_region = negative_control_strategy
+        )
+        for image_idx in image_metadata.index
+    )
+
 
     pass
