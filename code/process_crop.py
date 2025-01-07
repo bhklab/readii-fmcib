@@ -2,13 +2,36 @@ import pandas as pd
 import SimpleITK as sitk
 import numpy as np
 
-from imgtools.ops import Resize
+from imgtools.ops.functional import resample
 from joblib import Parallel, delayed
 from pathlib import Path
 from readii.metadata import saveDataframeCSV
 from readii.negative_controls import applyNegativeControl
 from typing import Literal
 
+
+def resize_image(image:sitk.Image, new_size:tuple) -> sitk.Image:
+    """Resize an image via linear interpolation
+    
+    Parameters
+    ----------
+    image (sitk.Image)
+        The input image to be resized.
+    new_size (tuple)
+        Desired output size of the resized image. eg. (50, 50, 50)
+
+    Returns
+    -------
+    sitk.Image
+        Resized image.
+    """
+    original_size = np.array(image.GetSize())
+    original_spacing = np.array(image.GetSpacing())
+    new_spacing = original_spacing * original_size / new_size
+
+    return resample(image,
+                    new_spacing,
+                    output_size=new_size)
 
 
 def find_bbox(mask: sitk.Image) -> np.ndarray:
@@ -90,6 +113,7 @@ def crop_centroid(image: sitk.Image, centroid: tuple, input_size: tuple) -> sitk
     min_z = int(centroid[2] - input_size[2] // 2)
     max_z = int(centroid[2] + input_size[2] // 2)
 
+
     img_x, img_y, img_z = image.GetSize()
 
     if min_x < 0:
@@ -148,7 +172,7 @@ def crop_bbox(image: sitk.Image, bbox_coords: tuple, input_size: tuple) -> sitk.
         min_z, max_z = img_z - input_size[2], img_z
     
     img_crop = image[min_x:max_x, min_y:max_y, min_z:max_z]
-    img_crop = Resize(input_size)(img_crop)
+    img_crop = resize_image(img_crop, input_size)
     return img_crop
 
 
@@ -176,17 +200,17 @@ def crop_maxdim_cube(image: sitk.Image, bbox_coords: tuple, input_size: tuple) -
 
     # get maximum dimension of bounding box
     max_dim = max(max_x - min_x, max_y - min_y, max_z - min_z)
-    mean_x = (max_x + min_x) // 2
-    mean_y = (max_y + min_y) // 2
-    mean_z = (max_z + min_z) // 2
+    mean_x = int((max_x + min_x) // 2)
+    mean_y = int((max_y + min_y) // 2)
+    mean_z = int((max_z + min_z) // 2)
 
     # define new bounding boxes based on the maximum dimension of ROI bounding box
-    min_x = mean_x - max_dim // 2
-    max_x = mean_x + max_dim // 2
-    min_y = mean_y - max_dim // 2
-    max_y = mean_y + max_dim // 2
-    min_z = mean_z - max_dim // 2
-    max_z = mean_z + max_dim // 2
+    min_x = int(mean_x - max_dim // 2)
+    max_x = int(mean_x + max_dim // 2)
+    min_y = int(mean_y - max_dim // 2)
+    max_y = int(mean_y + max_dim // 2)
+    min_z = int(mean_z - max_dim // 2)
+    max_z = int(mean_z + max_dim // 2)
 
     img_x, img_y, img_z = image.GetSize()
 
@@ -216,7 +240,7 @@ def crop_maxdim_cube(image: sitk.Image, bbox_coords: tuple, input_size: tuple) -
         min_z, max_z = 0, img_z
     
     img_crop = image[min_x:max_x, min_y:max_y, min_z:max_z]
-    img_crop = Resize(input_size)(img_crop)
+    img_crop = resize_image(img_crop, input_size)
     return img_crop
 
 
