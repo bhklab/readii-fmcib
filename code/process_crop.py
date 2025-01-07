@@ -280,8 +280,11 @@ def get_fmcib_row(pat_metadata_row:pd.Series,
     """Process a single image for FMCIB input"""
     patient_id = pat_metadata_row['patient_ID']
     
-   
-    crop_path = output_path / negative_control_strategy / f"{patient_id}.nii.gz"
+    if negative_control_region: 
+        image_type = negative_control_strategy + "_" + negative_control_region
+    else:
+        image_type = negative_control_strategy
+    crop_path = output_path / image_type / f"{patient_id}.nii.gz"
     crop_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not crop_path.exists():
@@ -308,8 +311,8 @@ def get_fmcib_row(pat_metadata_row:pd.Series,
             # Write out cropped image
             sitk.WriteImage(cropped_image, crop_path)
 
-        except Exception:
-            return None, -1, -1, -1,
+        except Exception as e:
+            raise e
     
     return crop_path, 0,0,0
 
@@ -341,12 +344,14 @@ def prep_data_for_fmcib(input_image_dir:Path,
         for image_idx in image_metadata.index
     )
 
-    # Filter out None and ensure each result is a list (even if it's empty)
-    proc_image_metadata = [row for row in proc_image_metadata if (isinstance(row, list) and len(row) > 0)]
+    metadata_df = pd.DataFrame(proc_image_metadata, columns=["image_path", "coordX", "coordY", "coordZ"])
 
-    metadata_df = pd.DataFrame(proc_image_metadata)
+    if negative_control_region: 
+        image_type = negative_control_strategy + "_" + negative_control_region
+    else:
+        image_type = negative_control_strategy
 
-    df_output_path = output_dir_path / "fmcib_input" / f"cropped_{crop_method}" / f"fmcib_input_{negative_control_strategy}_{negative_control_region}.csv"
+    df_output_path = output_dir_path / "fmcib_input" / f"cropped_{crop_method}" / f"fmcib_input_{image_type}.csv"
     
     saveDataframeCSV(metadata_df, df_output_path)
 
