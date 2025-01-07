@@ -225,7 +225,7 @@ def crop_fmcib_input(image:sitk.Image,
                      mask:sitk.Image, 
                      crop_method:Literal["bbox", "centroid", "cube"]="bbox",
                      input_size:tuple = (50,50,50),
-                    ):
+                    )-> sitk.Image:
     """Crop and resize an image in a specified manner using a mask to find a bounding box or centroid."""
     match crop_method:
         case "bbox":
@@ -252,7 +252,7 @@ def get_fmcib_row(pat_metadata_row:pd.Series,
                   roi_name:str = "GTV",
                   negative_control_strategy:Literal["original", "shuffled", "sampled"] = "original",
                   negative_control_region:Literal[None, "full", "roi", "non-roi"] = None,
-                  ):
+                  )-> tuple[Path, int, int, int]:
     """Process a single image for FMCIB input"""
     patient_id = pat_metadata_row['patient_ID']
     
@@ -296,7 +296,7 @@ def prep_data_for_fmcib(input_image_dir:Path,
                         roi_name:str = "GTV",
                         negative_control_strategy:Literal["original", "shuffled", "sampled"] = "original",
                         negative_control_region:Literal[None, "full", "roi", "non-roi"] = None
-                        ):
+                        )-> pd.DataFrame:
     # Read in the output summary metadata file from med-imagetools nifti conversion
     image_metadata = pd.read_csv(input_image_dir / "dataset.csv")
 
@@ -326,3 +326,5 @@ def prep_data_for_fmcib(input_image_dir:Path,
     saveDataframeCSV(metadata_df, df_output_path)
 
     return metadata_df
+
+
