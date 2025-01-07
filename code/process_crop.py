@@ -5,6 +5,7 @@ import numpy as np
 from imgtools.ops import Resize
 from joblib import Parallel, delayed
 from pathlib import Path
+from readii.metadata import saveDataframeCSV
 from readii.negative_controls import applyNegativeControl
 from typing import Literal
 
@@ -289,18 +290,17 @@ def get_fmcib_row(pat_metadata_row:pd.Series,
 
 
 def prep_data_for_fmcib(input_image_dir:Path, 
-                        output_path:Path, 
+                        output_dir_path:Path, 
                         crop_method:Literal["bbox", "centroid", "cube"]="bbox",
                         input_size:tuple = (50,50,50),
                         roi_name:str = "GTV",
-                        negative_control_strategy:Literal[None, "shuffled", "sampled"] = None,
+                        negative_control_strategy:Literal["original", "shuffled", "sampled"] = "original",
                         negative_control_region:Literal[None, "full", "roi", "non-roi"] = None
                         ):
     # Read in the output summary metadata file from med-imagetools nifti conversion
     image_metadata = pd.read_csv(input_image_dir / "dataset.csv")
 
-    cropped_output_dir = output_path / f"cropped_{crop_method}"
-
+    cropped_output_dir = output_dir_path / "cropped_images" / f"cropped_{crop_method}"
 
     proc_image_metadata = Parallel(n_jobs=-1)(
         delayed(get_fmcib_row)(
@@ -311,10 +311,18 @@ def prep_data_for_fmcib(input_image_dir:Path,
             input_size = input_size,
             roi_name = roi_name,
             negative_control_strategy = negative_control_strategy,
-            negative_control_region = negative_control_strategy
+            negative_control_region = negative_control_region
         )
         for image_idx in image_metadata.index
     )
 
+    # Filter out None and ensure each result is a list (even if it's empty)
+    proc_image_metadata = [row for row in proc_image_metadata if (isinstance(row, list) and len(row) > 0)]
 
-    pass
+    metadata_df = pd.DataFrame(proc_image_metadata)
+
+    df_output_path = output_dir_path / "fmcib_input" / f"cropped_{crop_method}" / f"fmcib_input_{negative_control_strategy}_{negative_control_region}.csv"
+    
+    saveDataframeCSV(metadata_df, df_output_path)
+
+    return metadata_df
