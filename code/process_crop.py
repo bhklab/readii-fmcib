@@ -229,16 +229,16 @@ def crop_fmcib_input(image:sitk.Image,
     """Crop and resize an image in a specified manner using a mask to find a bounding box or centroid."""
     match crop_method:
         case "bbox":
-            bbox = find_bbox(mask)
-            cropped_image = crop_bbox(image, bbox, input_size)
+            bbox_coords = find_bbox(mask)
+            cropped_image = crop_bbox(image, bbox_coords, input_size)
         
         case "centroid":
             centroid = find_centroid(mask)
             cropped_image = crop_centroid(image, centroid, input_size)
         
         case "cube":
-            bbox = find_bbox(mask)
-            cropped_image = crop_maxdim_cube(image, bbox, input_size)
+            bbox_coords = find_bbox(mask)
+            cropped_image = crop_maxdim_cube(image, bbox_coords, input_size)
     
     return cropped_image
 
