@@ -280,10 +280,11 @@ def get_fmcib_row(pat_metadata_row:pd.Series,
     """Process a single image for FMCIB input"""
     patient_id = pat_metadata_row['patient_ID']
     
-    output_path.mkdir(parents=True, exist_ok=True)
+   
     crop_path = output_path / negative_control_strategy / f"{patient_id}.nii.gz"
+    crop_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if not crop_path.exists:
+    if not crop_path.exists():
         try:
             image_path = input_image_dir / pat_metadata_row['output_folder_CT'] / "CT.nii.gz"
             mask_path = input_image_dir / pat_metadata_row['output_folder_RTSTRUCT_CT'] / f"{roi_name}.nii.gz"
@@ -302,13 +303,13 @@ def get_fmcib_row(pat_metadata_row:pd.Series,
                                              randomSeed = 10)
                 
             # Crop the image to the ROI mask
-            cropped_image = crop_fmcib_input(image_path, mask_path, crop_method, input_size)
+            cropped_image = crop_fmcib_input(image, mask, crop_method, input_size)
 
             # Write out cropped image
             sitk.WriteImage(cropped_image, crop_path)
 
-        except Exception as e:
-            return None, 0, 0, 0
+        except Exception:
+            return None, -1, -1, -1,
     
     return crop_path, 0,0,0
 
