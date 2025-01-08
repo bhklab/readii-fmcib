@@ -3,5 +3,8 @@ dataset_name: RADCURE
 
 patient_id_pattern: RADCURE-[0-9]{4}
 
+roi_pattern: {GTV: "GTVp$"}
+modalities: "CT,RTSTRUCT"
+
 negative_control_regions: ["full", "roi", "non_roi"]
 negative_control_types: ["shuffled", "randomized_sampled"]
