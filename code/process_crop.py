@@ -323,37 +323,75 @@ def prep_data_for_fmcib(input_image_dir:Path,
                         input_size:tuple = (50,50,50),
                         roi_name:str = "GTV",
                         negative_control_strategy:Literal["original", "shuffled", "sampled"] = "original",
-                        negative_control_region:Literal[None, "full", "roi", "non-roi"] = None
+                        negative_control_region:Literal[None, "full", "roi", "non-roi"] = None,
+                        parallel:bool = False
                         )-> pd.DataFrame:
+    """Process a given image set for input to FMCIB inference.
+       For each image, generate a negative control image if specified, then crop and resize the image.
+
+    Parameters
+    ----------
+    
+    """
     # Read in the output summary metadata file from med-imagetools nifti conversion
     image_metadata = pd.read_csv(input_image_dir / "dataset.csv")
 
+    # Set up output path for images
     cropped_output_dir = output_dir_path / "cropped_images" / f"cropped_{crop_method}"
-
-    proc_image_metadata = Parallel(n_jobs=-1)(
-        delayed(get_fmcib_row)(
-            image_metadata.loc[image_idx],
-            input_image_dir = input_image_dir,
-            output_path = cropped_output_dir,
-            crop_method = crop_method,
-            input_size = input_size,
-            roi_name = roi_name,
-            negative_control_strategy = negative_control_strategy,
-            negative_control_region = negative_control_region
-        )
-        for image_idx in image_metadata.index
-    )
-
-    metadata_df = pd.DataFrame(proc_image_metadata, columns=["image_path", "coordX", "coordY", "coordZ"])
 
     if negative_control_region: 
         image_type = negative_control_strategy + "_" + negative_control_region
     else:
         image_type = negative_control_strategy
 
+    # Set up output path for dataframe containing data for expected FMCIB input
     df_output_path = output_dir_path / "fmcib_input" / f"cropped_{crop_method}" / f"fmcib_input_{image_type}.csv"
-    
-    saveDataframeCSV(metadata_df, df_output_path)
+
+    if cropped_output_dir.exists() and any(cropped_output_dir.iterdir()) and df_output_path.exists():
+        print(f"Data already processed for {crop_method} and {image_type}")
+
+        try:
+            # Load in the dataframe of metadata
+            metadata_df = pd.read_csv(df_output_path)
+        except Exception as e:
+            raise e
+
+    else:
+        if parallel:
+            # Process images for this negative control and crop setting
+            proc_image_metadata = Parallel(n_jobs=-1)(
+                delayed(get_fmcib_row)(
+                    image_metadata.loc[image_idx],
+                    input_image_dir = input_image_dir,
+                    output_path = cropped_output_dir,
+                    crop_method = crop_method,
+                    input_size = input_size,
+                    roi_name = roi_name,
+                    negative_control_strategy = negative_control_strategy,
+                    negative_control_region = negative_control_region
+                )
+                for image_idx in image_metadata.index
+            )
+        else:
+            proc_image_metadata = [
+                get_fmcib_row(
+                    image_metadata.loc[image_idx],
+                    input_image_dir = input_image_dir,
+                    output_path = cropped_output_dir,
+                    crop_method = crop_method,
+                    input_size = input_size,
+                    roi_name = roi_name,
+                    negative_control_strategy = negative_control_strategy,
+                    negative_control_region = negative_control_region
+                )
+                for image_idx in image_metadata.index
+            ]
+
+        # Convert returned dictionary to a dataframe with correct column names
+        metadata_df = pd.DataFrame(proc_image_metadata, columns=["image_path", "coordX", "coordY", "coordZ"])
+        
+        saveDataframeCSV(metadata_df, df_output_path)
+
 
     return metadata_df
 
