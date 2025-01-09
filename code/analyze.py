@@ -1,3 +1,4 @@
+import itertools
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -9,7 +10,9 @@ from readii.analyze.plot_correlation import plotSelfCorrHeatmap, plotCrossCorrHe
 def prepPatientIndex(feature_df:pd.DataFrame, file_path_column:str, pat_id_pattern:str) -> pd.DataFrame:
     """Extract patient ID from a DataFrame column of file paths based on a provided regex pattern."""
     # Get patient ID from file path name and make a column for this
-    feature_df['patient_ID'] = feature_df[file_path_column].str.findall(pat_id_pattern)
+    pat_ids = feature_df[file_path_column].str.findall(pat_id_pattern)
+
+    feature_df['patient_ID'] = list(itertools.chain.from_iterable(pat_ids))
     
     # Set the patient ID column as the index for the dataframe
     feature_df = setPatientIdAsIndex(feature_df, 'patient_ID')
