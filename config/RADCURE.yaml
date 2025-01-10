@@ -19,7 +19,7 @@ negative_control_regions: ["full", "roi", "non_roi"]
 negative_control_types: ["shuffled", "randomized_sampled"]
 
 # Method to use to crop images to expected input size for FMCIB inference
-crop_method: "centroid" 
+crop_method: "bbox" 
 # crop_method options:
 # 1. `bbox` - Find bounding box based on dimensions of the region of interest (ROI), crop image to these coordinates, resize/resample to `FMCIB_INPUT_SIZE`.
 # 2. `cube` - Create cube based on largest ROI bounding box dimension, crop image to these coordinates, resize/resample to `FMCIB_INPUT_SIZE`.
