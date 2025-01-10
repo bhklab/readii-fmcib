@@ -1,7 +1,29 @@
 # Config file for RADCURE
 dataset_name: RADCURE 
 
+# String pattern of patient ID for this dataset - indicates RADCURE####
 patient_id_pattern: RADCURE-[0-9]{4}
 
+
+# Med-ImageTools arguments
+# General name of region of interest and all possible ROI name matches in the dataset / regex to match all possible ROI name matches
+roi_pattern: {GTV: "GTVp$"}
+
+# Modalities present in the dataset to process
+modalities: "CT,RTSTRUCT"
+
+# READII arguments
+# Region of image to apply negative control strategy to
 negative_control_regions: ["full", "roi", "non_roi"]
+# Which negative control strategies to apply
 negative_control_types: ["shuffled", "randomized_sampled"]
+
+# Method to use to crop images to expected input size for FMCIB inference
+crop_method: "bbox" 
+# crop_method options:
+# 1. `bbox` - Find bounding box based on dimensions of the region of interest (ROI), crop image to these coordinates, resize/resample to `FMCIB_INPUT_SIZE`.
+# 2. `cube` - Create cube based on largest ROI bounding box dimension, crop image to these coordinates, resize/resample to `FMCIB_INPUT_SIZE`.
+# 3. `centroid` - Create `FMCIB_INPUT_SIZE` cube centered on the ROI centroid, crop to these coordinates.
+
+# Size to crop/resize images to for FMCIB inference 
+crop_size: [50, 50, 50]
