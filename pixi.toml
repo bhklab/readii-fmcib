@@ -7,7 +7,7 @@ channels = ["conda-forge"]
 platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
 
 [tasks]
-make_kernel = "ipython kernel install --user --name=readii_fmcib --display-name=readii_fmcib"
+kernel = "ipython kernel install --name=readii_fmcib --display-name=readii_fmcib --sys-prefix"
 
 [environments]
 fmcib = {features = ["fmcib"], no-default-feature = true}
@@ -24,6 +24,8 @@ ipywidgets = ">=8.1.5,<9"
 readii = ">=1.26.0, <2"
 med-imagetools = ">=1.10.1, <2"
 
+############################################## FMCIB ################################################
+
 [feature.fmcib.dependencies]
 python = "3.10.*"
 ipykernel = ">=6.29.5,<7"
@@ -35,3 +37,7 @@ joblib = ">=1.4.2,<2"
 project-lighter = { version = "==0.0.2a19" }
 foundation-cancer-image-biomarker = ">=1.0.0, <2"
 med-imagetools = ">=1.2.0.2, <2"
+
+[feature.fmcib.tasks.fmcib_kernel]
+cmd = "ipython kernel install --name=fmcib --display-name=fmcib --sys-prefix"
+description = "Create Jupyter kernel for running FMCIB inference in Jupyter notebook. Will install in .pixi directory."
