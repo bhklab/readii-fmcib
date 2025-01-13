@@ -16,8 +16,8 @@ To run full pipeline:
 3. In the configuration file under `config/RADCURE.yaml`, set the READII negative control region and types, crop method, and crop size you wish to process for inference with FMCIB.
 
 
-    > [!WARNING]
-    > Do not change any of the other settings in the configuration file for RADCURE. This will impact the pre-processing steps. If you wish to process a different dataset, then `dataset_name`, `patient_id_pattern`, `roi_pattern` and `modalities` should be updated accordingly, but in the same style.
+> [!WARNING]
+> Do not change any of the other settings in the configuration file for RADCURE. This will impact the pre-processing steps. If you wish to process a different dataset, then `dataset_name`, `patient_id_pattern`, `roi_pattern` and `modalities` should be updated accordingly, but in the same style.
 
 
 4. Open the `run_readii_prep.ipynb` notebook and follow the instructions to run the steps. Make sure to change `path_to_downloaded_data` to the directory that you downloaded the RADCURE dataset to in step 1.
