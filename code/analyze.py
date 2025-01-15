@@ -66,7 +66,7 @@ def makeAllHistogramPlots(correlation_matrix:pd.DataFrame,
                         correlation_method:str="pearson", 
                         num_bins:int = 450,
                         self_corr_y_max = 250000,
-                        cross_corr_y_max = 700000,
+                        cross_corr_y_max = 950000,
                         overwrite:bool=False)-> tuple[Path, Path, Path]:
     """"Plot and save correlation histograms for the vertical, horizontal, and cross correlation feature sections of a full correlation matrix."""
 
