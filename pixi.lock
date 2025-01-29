@@ -1896,12 +1896,12 @@ packages:
   version: '5'
   sha256: 1b337b83b562843fb31d3893df03387e2944bc3674af71b08a8f7ddf2e78c99f
   requires_dist:
+  - simpleitk>=1.2.0
+  - cleo>=2.0.0
   - numpy>=1.15.4
   - pydicom>=1.2.1
   - scikit-image>=0.17.1
   - scipy>=1.2.0
-  - simpleitk>=1.2.0
-  - cleo>=2.0.0
   - termcolor>=2.2.0
   requires_python: '>=3.6'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/debugpy-1.8.11-py310hf71b8c6_0.conda
