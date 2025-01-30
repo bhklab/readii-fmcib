@@ -5,7 +5,7 @@ import pandas as pd
 
 from pathlib import Path
 
-from readii.data.label import setPatientIdAsIndex
+from readii.process.label import setPatientIdAsIndex
 from readii.analyze.correlation import getSelfAndCrossCorrelations
 from readii.analyze.plot_correlation import plotSelfCorrHeatmap, plotCrossCorrHeatmap, plotSelfCorrHistogram, plotCrossCorrHistogram
 
