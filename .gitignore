@@ -19,5 +19,6 @@ spec_file_root.txt
 rawdata/
 procdata/
 results/
+archive/images/
 
 .DS_Store
