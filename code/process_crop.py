@@ -1,7 +1,6 @@
 import pandas as pd
 import SimpleITK as sitk
 import numpy as np
-
 from imgtools.ops.functional import resample
 from joblib import Parallel, delayed
 from pathlib import Path
@@ -268,7 +267,7 @@ def crop_fmcib_input(image:sitk.Image,
 
 
 
-def get_fmcib_row(pat_metadata_row:pd.Series,
+def get_fmcib_row(pat_metadata_rows:tuple[pd.Series, pd.Series],
                   input_image_dir:Path,
                   output_path:Path,
                   crop_method:Literal["bbox", "centroid", "cube"]="bbox",
@@ -278,19 +277,26 @@ def get_fmcib_row(pat_metadata_row:pd.Series,
                   negative_control_region:Literal[None, "full", "roi", "non-roi"] = None,
                   )-> tuple[Path, int, int, int]:
     """Process a single image for FMCIB input"""
-    patient_id = pat_metadata_row['patient_ID']
+    patient_id = pat_metadata_rows[0]['PatientID']
+    sample_number = pat_metadata_rows[0]['SampleNumber']
     
     if negative_control_region: 
         image_type = negative_control_strategy + "_" + negative_control_region
     else:
         image_type = negative_control_strategy
-    crop_path = output_path / image_type / f"{patient_id}.nii.gz"
+    crop_path = output_path / image_type / f"{patient_id}_{sample_number}.nii.gz"
     crop_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not crop_path.exists():
         try:
-            image_path = input_image_dir / pat_metadata_row['output_folder_CT'] / "CT.nii.gz"
-            mask_path = input_image_dir / pat_metadata_row['output_folder_RTSTRUCT_CT'] / f"{roi_name}.nii.gz"
+            if pat_metadata_rows[0]['ImageID'] == pat_metadata_rows[1]['ImageID']:
+              raise ValueError(f"Both rows for patient {patient_id} have the same modality. Cannot determine CT and RTSTRUCT rows.")
+              
+            CT_row = pat_metadata_rows[0] if pat_metadata_rows[0]['ImageID'] == "CT" else pat_metadata_rows[1]
+            mask_row = pat_metadata_rows[0] if pat_metadata_rows[0]['ImageID'] == "GTV" else pat_metadata_rows[1]
+            
+            image_path = input_image_dir / CT_row['filepath']
+            mask_path = input_image_dir / mask_row['filepath']
 
             # Load image and mask to crop to 
             image = sitk.ReadImage(image_path)
@@ -334,7 +340,7 @@ def prep_data_for_fmcib(input_image_dir:Path,
     
     """
     # Read in the output summary metadata file from med-imagetools nifti conversion
-    image_metadata = pd.read_csv(input_image_dir / "dataset.csv")
+    image_metadata = pd.read_csv(Path(input_image_dir / f"{input_image_dir.name}_index.csv"))
 
     # Set up output path for images
     cropped_output_dir = output_dir_path / "cropped_images" / f"cropped_{crop_method}"
@@ -355,13 +361,25 @@ def prep_data_for_fmcib(input_image_dir:Path,
             metadata_df = pd.read_csv(df_output_path)
         except Exception as e:
             raise e
-
+          
     else:
+      
+        # Find all image and mask pairs (rows with same StudyInstanceUID but different SampleNumber)
+        pairs = []
+        grouped = image_metadata.groupby("StudyInstanceUID")
+        for _, group in grouped:
+          if len(group) > 1:
+            sample_numbers = group["SampleNumber"].tolist()
+            for i in range(len(sample_numbers)):
+              for j in range(i + 1, len(sample_numbers)):
+                pairs.append((group.iloc[i], group.iloc[j]))
+        
+
         if parallel:
             # Process images for this negative control and crop setting
             proc_image_metadata = Parallel(n_jobs=-1)(
                 delayed(get_fmcib_row)(
-                    image_metadata.loc[image_idx],
+                    pair,
                     input_image_dir = input_image_dir,
                     output_path = cropped_output_dir,
                     crop_method = crop_method,
@@ -370,12 +388,12 @@ def prep_data_for_fmcib(input_image_dir:Path,
                     negative_control_strategy = negative_control_strategy,
                     negative_control_region = negative_control_region
                 )
-                for image_idx in image_metadata.index
+                for pair in pairs
             )
         else:
             proc_image_metadata = [
                 get_fmcib_row(
-                    image_metadata.loc[image_idx],
+                    pair,
                     input_image_dir = input_image_dir,
                     output_path = cropped_output_dir,
                     crop_method = crop_method,
@@ -384,9 +402,8 @@ def prep_data_for_fmcib(input_image_dir:Path,
                     negative_control_strategy = negative_control_strategy,
                     negative_control_region = negative_control_region
                 )
-                for image_idx in image_metadata.index
+                for pair in pairs
             ]
-
         # Convert returned dictionary to a dataframe with correct column names
         metadata_df = pd.DataFrame(proc_image_metadata, columns=["image_path", "coordX", "coordY", "coordZ"])
         
