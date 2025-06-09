@@ -1,8 +1,8 @@
 # Config file for RADCURE
-dataset_name: TCIA_NSCLC-Radiomics
+dataset_name: TCIA_HEAD-NECK-RADIOMICS-HN1
 
 # String pattern of patient ID for this dataset - 
-patient_id_pattern: "LUNG-[0-9]{3}"
+patient_id_pattern: "HN[0-9]{4}"
 
 
 # Med-ImageTools arguments
