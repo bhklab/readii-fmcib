@@ -278,7 +278,7 @@ def get_fmcib_row(pat_metadata_row:pd.Series,
                   negative_control_region:Literal[None, "full", "roi", "non-roi"] = None,
                   )-> tuple[Path, int, int, int]:
     """Process a single image for FMCIB input"""
-    patient_id = pat_metadata_row['patient_ID']
+    patient_id = pat_metadata_row['PatientID']
     
     if negative_control_region: 
         image_type = negative_control_strategy + "_" + negative_control_region
@@ -289,8 +289,8 @@ def get_fmcib_row(pat_metadata_row:pd.Series,
 
     if not crop_path.exists():
         try:
-            image_path = input_image_dir / pat_metadata_row['output_folder_CT'] / "CT.nii.gz"
-            mask_path = input_image_dir / pat_metadata_row['output_folder_RTSTRUCT_CT'] / f"{roi_name}.nii.gz"
+            image_path = input_image_dir / pat_metadata_row['filepath']
+            mask_path = input_image_dir / pat_metadata_row['filepath']
 
             # Load image and mask to crop to 
             image = sitk.ReadImage(image_path)
@@ -317,7 +317,8 @@ def get_fmcib_row(pat_metadata_row:pd.Series,
     return crop_path, 0,0,0
 
 
-def prep_data_for_fmcib(input_image_dir:Path, 
+def prep_data_for_fmcib(
+        input_image_dir:Path, 
                         output_dir_path:Path, 
                         crop_method:Literal["bbox", "centroid", "cube"]="bbox",
                         input_size:tuple = (50,50,50),
@@ -334,7 +335,7 @@ def prep_data_for_fmcib(input_image_dir:Path,
     
     """
     # Read in the output summary metadata file from med-imagetools nifti conversion
-    image_metadata = pd.read_csv(input_image_dir / "dataset.csv")
+    image_metadata = pd.read_csv(input_image_dir / f"{input_image_dir.stem}_index-simple.csv")
 
     # Set up output path for images
     cropped_output_dir = output_dir_path / "cropped_images" / f"cropped_{crop_method}"
