@@ -1,4 +1,4 @@
-[project]
+[workspace]
 name = "readii-fmcib"
 version = "0.1.0"
 description = "Code to run READII negative controls through FMCIB"
@@ -19,10 +19,13 @@ pip = ">=24.3.1,<25"
 numpy = "1.26.4.*"
 python-dotenv = ">=1.0.1,<2"
 ipywidgets = ">=8.1.5,<9"
+jupyterlab = ">=4.5.7,<5"
+ipython = ">=9.13.0,<10"
 
 [pypi-dependencies]
 readii = ">=1.26.0, <2"
 med-imagetools = ">=1.10.1, <2"
+damply = ">=0.18.2, <0.19"
 
 ############################################## FMCIB ################################################
 
