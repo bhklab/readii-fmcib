@@ -1,4 +1,4 @@
-[project]
+[workspace]
 name = "readii-fmcib"
 version = "0.1.0"
 description = "Code to run READII negative controls through FMCIB"
@@ -22,7 +22,7 @@ ipywidgets = ">=8.1.5,<9"
 
 [pypi-dependencies]
 readii = ">=1.26.0, <2"
-med-imagetools = ">=1.10.1, <2"
+med-imagetools = ">=1.23.2, <2"
 
 ############################################## FMCIB ################################################
 
